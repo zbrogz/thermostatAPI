@@ -1,0 +1,30 @@
+version: 1
+
+name: thermostatAPI
+
+environments:
+  dev:
+    api:
+      type: apigateway
+      swagger: ./swagger.yml
+      description: API for a virtual thermostat integrated with separate HVAC and temperature sensor APIs
+      dependencies:
+        - state
+        - updater
+    state:
+      type: dynamodb
+      partition_key:
+        name: uuid
+        type: String
+    updater:
+      type: lambda
+      path_to_code: .
+      handler: updater.lambda_handler
+      runtime: python3.6
+      dependencies:
+        - state
+    schedule:
+      type: cloudwatchevent
+      schedule: rate(1 minute)
+      event_consumers:
+        - service_name: updater

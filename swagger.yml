@@ -1,0 +1,164 @@
+swagger: '2.0'
+info:
+  version: "2.0"
+  title: thermostatAPI
+  description: API for a virtual thermostat integrated with separate HVAC and temperature sensor APIs
+schemes:
+ - https
+basePath: /dev
+securityDefinitions:
+  ApiKeyAuth:
+    type: apiKey
+    in: header
+    name: X-API-KEY
+security:
+  - ApiKeyAuth: []
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /thermostat:
+    post:
+      description: Adds a new thermostat
+      parameters:
+        - name: area
+          in: body
+          description: Name of area where thermostat is located (e.g. Main Floor)
+          required: true
+          schema:
+            type: object
+            properties:
+              area:
+                type: string
+        - name: hvac_url
+          in: body
+          description: Url of the hvac controller so it can be updated/retrieved by the thermostat
+          required: true
+          schema:
+            type: object
+            properties:
+              hvac_url:
+                type: string
+        - name: temperature_url
+          in: body
+          description: Url of the temperature sensor so it can be retrieved by the thermostat
+          required: true
+          schema:
+            type: object
+            properties:
+              temperature_url:
+                type: string
+
+      responses:
+        200:
+          description: Thermostat state with uuid
+          schema:
+            $ref: '#/definitions/State'
+        400:
+          $ref: '#/responses/Error'
+      x-lambda-function: state
+    get:
+      description: Gives list of thermostats
+      responses:
+        200:
+          description: thermostats
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/State'
+      x-lambda-function: state
+        
+  '/thermostat/{uuid}':
+    get:
+      description: Gets the state of a thermostat
+      parameters: 
+        - $ref: '#/parameters/UUID'
+      responses:
+        200:
+          description: thermostat state
+          schema:
+            $ref: '#/definitions/State'
+        400:
+          $ref: '#/responses/Error'
+      x-lambda-function: state
+
+    put:
+      description: Updates the state of a thermostat
+      parameters: 
+        - $ref: '#/parameters/UUID'
+        - name: state
+          in: body
+          description: thermostat state
+          schema:
+            $ref: '#/definitions/State'
+      responses:
+        200:
+          description: Successfully updated thermostat
+        400:
+          $ref: '#/responses/Error'
+      x-lambda-function: state
+    delete:
+      description: Delete a thermostat by id
+      parameters:
+          - $ref: '#/parameters/UUID'
+      responses:
+        200:
+          description: Successfully deleted thermostat
+        400:
+          $ref: '#/responses/Error'
+      x-lambda-function: state
+        
+definitions:
+  State:
+    description: thermostat state
+    type: object
+    properties:
+      uuid:
+        type: string
+      area:
+        type: string
+      hvac_url:
+        type: string
+      temperature_url:
+        type: string
+      desired_temperature:
+        type: integer
+      eco_min_temperature:
+        type: integer
+      eco_max_temperature:
+        type: integer
+      tolerance:
+        type: integer
+      mode:
+        description: off, heat, cool, normal, eco
+        type: string
+      fan:
+        description: auto or on
+        type: string
+
+parameters:
+  UUID:
+    name: uuid
+    in: path
+    type: string
+    required: true
+    description: Id of thermostat
+
+responses:
+  Error:
+    description: Invalid request error
+    schema:
+      type: object
+      properties:
+        message:
+          type: string
+          
+x-lambda-functions:
+  state:
+    runtime: python3.6
+    handler: state.lambda_handler
+    memory: 128
+    path_to_code: ./
+  
+    
