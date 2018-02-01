@@ -104,7 +104,7 @@ def update_thermostat(uuid, thermostat_data):
         updateExpressions.append("tolerance = :l")
         attributeValues[':l'] = thermostat_data['tolerance']
     if 'mode' in thermostat_data and isinstance(thermostat_data['mode'], str):
-        updateExpressions.append("mode = :m")
+        updateExpressions.append("#m = :m")
         attributeValues[':m'] = thermostat_data['mode']
     if 'fan' in thermostat_data and isinstance(thermostat_data['fan'], str):
         updateExpressions.append("fan = :f")
@@ -118,7 +118,8 @@ def update_thermostat(uuid, thermostat_data):
         Key={'uuid': uuid},
         UpdateExpression=updateExpressionStr,
         ExpressionAttributeValues=attributeValues,
-        ReturnValues="ALL_NEW")
+        ReturnValues="ALL_NEW",
+        ExpressionAttributeNames={'#m' : 'mode'})
 
     # This method will call the updater lambda
     boto3.client('lambda').invoke(
