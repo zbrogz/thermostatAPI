@@ -4,6 +4,9 @@ import json
 from uuid import uuid4 as Uuid
 import decimal
 
+modes = ["off", "heat", "cool", "normal", "eco"]
+fan_modes = ["on", "auto"]
+
 
 # Helper class to convert a DynamoDB item to JSON.
 class DecimalEncoder(json.JSONEncoder):
@@ -76,6 +79,7 @@ def create_thermostat(thermostat_data):
 def update_thermostat(uuid, thermostat_data):
     updateExpressions = []
     attributeValues = {}
+    expressionAttributeNames = {}
     if 'area' in thermostat_data and isinstance(thermostat_data['area'], str):
         updateExpressions.append("area = :a")
         attributeValues[':a'] = thermostat_data['area']
@@ -103,10 +107,16 @@ def update_thermostat(uuid, thermostat_data):
             isinstance(thermostat_data['tolerance'], int)):
         updateExpressions.append("tolerance = :l")
         attributeValues[':l'] = thermostat_data['tolerance']
-    if 'mode' in thermostat_data and isinstance(thermostat_data['mode'], str):
+    if ('mode' in thermostat_data and
+            isinstance(thermostat_data['mode'], str) and
+            thermostat_data['mode'] in modes):
         updateExpressions.append("#m = :m")
         attributeValues[':m'] = thermostat_data['mode']
-    if 'fan' in thermostat_data and isinstance(thermostat_data['fan'], str):
+        # Necessary because #m is a reserved word for dyanmodb
+        expressionAttributeNames['#m'] = 'mode'
+    if ('fan' in thermostat_data and
+            isinstance(thermostat_data['fan'], str) and
+            thermostat_data['fan'] in fan_modes):
         updateExpressions.append("fan = :f")
         attributeValues[':f'] = thermostat_data['fan']
 
@@ -114,12 +124,17 @@ def update_thermostat(uuid, thermostat_data):
         raise Exception('Error. Invalid update request.')
     updateExpressionStr = "set " + (",".join(updateExpressions))
 
-    therm = state_table().update_item(
-        Key={'uuid': uuid},
-        UpdateExpression=updateExpressionStr,
-        ExpressionAttributeValues=attributeValues,
-        ReturnValues="ALL_NEW",
-        ExpressionAttributeNames={'#m' : 'mode'})
+    if(expressionAttributeNames):
+        state_table().update_item(
+            Key={'uuid': uuid},
+            UpdateExpression=updateExpressionStr,
+            ExpressionAttributeValues=attributeValues,
+            ExpressionAttributeNames=expressionAttributeNames)
+    else:
+        state_table().update_item(
+            Key={'uuid': uuid},
+            UpdateExpression=updateExpressionStr,
+            ExpressionAttributeValues=attributeValues)
 
     # This method will call the updater lambda
     boto3.client('lambda').invoke(
@@ -129,7 +144,7 @@ def update_thermostat(uuid, thermostat_data):
     response = {
         "isBase64Encoded": "false",
         "statusCode": 200,
-        "body": "{\"message\": \"Hvac updated\"}"
+        "body": "{\"message\": \"Thermostat updated\"}"
     }
     return response
 
@@ -140,7 +155,7 @@ def delete_thermostat(uuid):
     response = {
         "isBase64Encoded": "false",
         "statusCode": 200,
-        "body": "{\"message\": \"Hvac deleted.\"}"
+        "body": "{\"message\": \"Thermostat deleted.\"}"
     }
     return response
 
