@@ -1,5 +1,7 @@
 from urllib import request
-from state import *
+from urllib import parse
+from state import state_table
+from state import json
 
 hvac_idle = {"heater": False, "ac": False, "fan": False}
 hvac_vent = {"heater": False, "ac": False, "fan": True}
@@ -11,6 +13,7 @@ def send_next_hvac(hvac_url, hvac, next_hvac):
     if next_hvac.items() <= hvac.items():
         return
     data = json.dumps(next_hvac).encode('utf8')
+    
     req = request.Request(
         url=hvac_url, data=data, method='PUT')
     resp = request.urlopen(req)
@@ -26,6 +29,7 @@ def update_hvac(thermostat, off_time_increment):
     eco_min = thermostat['eco_min_temperature']
     eco_max = thermostat['eco_max_temperature']
 
+    print(thermostat)
     if thermostat['mode'] == "off":
         next_hvac = hvac_idle
         next_hvac['off_time'] = hvac['off_time'] + off_time_increment
@@ -85,6 +89,9 @@ def update_hvac(thermostat, off_time_increment):
     # Check fan
     if thermostat['fan'] == 'on':
         next_hvac['fan'] = True
+    
+    print(next_hvac)
+    
     send_next_hvac(thermostat['hvac_url'], hvac, next_hvac)
 
 

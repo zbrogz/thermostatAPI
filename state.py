@@ -28,6 +28,7 @@ def get_thermostat(uuid):
     response = {
         'isBase64Encoded': 'false',
         'statusCode': 200,
+        'headers': {'Access-Control-Allow-Origin': '*'},
         'body': json.dumps(thermostat['Item'], cls=DecimalEncoder)
     }
     return response
@@ -38,6 +39,7 @@ def get_all_thermostats():
     response = {
         'isBase64Encoded': 'false',
         'statusCode': 200,
+        'headers': {'Access-Control-Allow-Origin': '*'},
         'body': json.dumps(thermostats['Items'], cls=DecimalEncoder)
     }
     return response
@@ -71,6 +73,7 @@ def create_thermostat(thermostat_data):
     response = {
         'isBase64Encoded': 'false',
         'statusCode': 200,
+        'headers': {'Access-Control-Allow-Origin': '*'},        
         'body': json.dumps(state)
     }
     return response
@@ -144,6 +147,7 @@ def update_thermostat(uuid, thermostat_data):
     response = {
         "isBase64Encoded": "false",
         "statusCode": 200,
+        'headers': {'Access-Control-Allow-Origin': '*'},
         "body": "{\"message\": \"Thermostat updated\"}"
     }
     return response
@@ -155,6 +159,7 @@ def delete_thermostat(uuid):
     response = {
         "isBase64Encoded": "false",
         "statusCode": 200,
+        'headers': {'Access-Control-Allow-Origin': '*'},
         "body": "{\"message\": \"Thermostat deleted.\"}"
     }
     return response
@@ -190,6 +195,7 @@ def lambda_handler(event, context):
         response = {
             "isBase64Encoded": "false",
             "statusCode": 400,
+            'headers': {'Access-Control-Allow-Origin': '*'},            
             "body": "{\"errorMessage\": \"" + e.args[0] + ".\"}"
         }
         return response
