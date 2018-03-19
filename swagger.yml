@@ -18,7 +18,7 @@ consumes:
 produces:
   - application/json
 paths:
-  /thermostat:
+  /:
     options:
       summary: CORS support
       description: |
@@ -108,7 +108,7 @@ paths:
               $ref: '#/definitions/State'
       x-lambda-function: state
         
-  /thermostat/{uuid}:
+  /{uuid}:
     options:
       summary: CORS support
       description: |
